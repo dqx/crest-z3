@@ -14,7 +14,7 @@
 #include "base/symbolic_execution.h"
 
 #define DEBUG(x)
-#define MAX_LINE_BUF 1024
+#define MAX_LINE_BUF 1024 * 4
 
 namespace crest {
 
