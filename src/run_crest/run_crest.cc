@@ -58,6 +58,14 @@ int main(int argc, char* argv[]) {
     } else {
       strategy = new crest::UniformRandomSearch(prog, num_iters, atoi(argv[4]));
     }
+  } else if (search_type == "-local_expect") {
+    strategy = new crest::MaxExpectLocalSearch(prog, num_iters);
+  } else if (search_type == "-global_expect") {
+    strategy = new crest::MaxExpectGlobalSearch(prog, num_iters);
+  } else if (search_type == "-icfg_local_expect") {
+    strategy = new crest::IcfgMaxExpectLocalSearch(prog, num_iters);
+  } else if (search_type == "-icfg_global_expect") {
+    strategy = new crest::IcfgMaxExpectGlobalSearch(prog, num_iters);
   } else {
     fprintf(stderr, "Unknown search strategy: %s\n", search_type.c_str());
     return 1;
