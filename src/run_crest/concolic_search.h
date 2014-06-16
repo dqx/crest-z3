@@ -13,6 +13,7 @@
 
 #include <map>
 #include <vector>
+#include <queue>
 #include <ext/hash_map>
 #include <ext/hash_set>
 #include <time.h>
