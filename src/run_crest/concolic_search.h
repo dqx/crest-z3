@@ -277,7 +277,117 @@ class CfgHeuristicSearch : public Search {
 			const SymbolicExecution& ex,
 			const set<branch_id_t>& bs);
 };
+class MaxExpectLocalSearch : public Search {
+ public:
+  MaxExpectLocalSearch(const string& program, int max_iterations);
+  virtual ~MaxExpectLocalSearch();
 
+  virtual void Run();
+ 
+ protected:
+  FILE* out;
+// private:
+  typedef vector<branch_id_t> nbhr_list_t;
+  vector<nbhr_list_t> cfg_;
+  vector<nbhr_list_t> cfg_rev_;
+  vector<nbhr_list_t> icfg_;  
+  vector<nbhr_list_t> icfg_rev_;
+  hash_map<branch_id_t, branch_id_t> branch_map_;
+  size_t new_branch_num_;    
+  branch_id_t new_max_branch_;  
+  
+  vector<double> dist_;
+  
+  vector<branch_id_t> new_paired_branch_;
+
+  
+  static const size_t kInfiniteDistance = 10000;
+
+  int iters_left_;
+
+  SymbolicExecution success_ex_;
+
+  // Stats.
+  unsigned num_inner_solves_;
+  unsigned num_inner_successes_pred_fail_;
+  unsigned num_inner_lucky_successes_;
+  unsigned num_inner_zero_successes_;
+  unsigned num_inner_nonzero_successes_;
+  unsigned num_inner_recursive_successes_;
+  unsigned num_inner_unsats_;
+  unsigned num_inner_pred_fails_;
+
+  unsigned num_top_solves_;
+  unsigned num_top_solve_successes_;
+
+  unsigned num_solves_;
+  unsigned num_solve_successes_;
+  unsigned num_solve_sat_attempts_;
+  unsigned num_solve_unsats_;
+  unsigned num_solve_recurses_;
+  unsigned num_solve_pred_fails_;
+  unsigned num_solve_all_concrete_;
+  unsigned num_solve_no_paths_;
+
+//  void UpdateBranchDistances();
+
+  virtual double UpdateBranchScore();
+  void PrintStats();
+  virtual double DFSBranchScore(branch_id_t branch, set<branch_id_t> path);
+  bool DoSearch(int depth, int iters, int pos, const SymbolicExecution& prev_ex);
+
+  virtual void MapBranch(const SymbolicExecution& ex, vector<branch_id_t>* new_branches_);
+  bool DoBoundedBFS(int i, int depth, const SymbolicExecution& prev_ex);
+  void SkipUntilReturn(const vector<branch_id_t> path, size_t* pos);
+
+  bool SolveAlongCfg(size_t i, const SymbolicExecution& prev_ex);
+
+  void CollectNextBranches(const vector<branch_id_t>& path,
+			   size_t* pos, vector<size_t>* idxs);
+
+  void RunProgram(const vector<value_t>& inputs, SymbolicExecution* ex);
+  bool UpdateCoverage(const SymbolicExecution& ex,
+		      set<branch_id_t>* new_branches);
+  bool UpdateCoverage(const SymbolicExecution& ex);
+
+};
+
+class MaxExpectGlobalSearch : public MaxExpectLocalSearch {
+ public:
+  MaxExpectGlobalSearch(const string& program, int max_iterations);
+  virtual ~MaxExpectGlobalSearch();
+
+  virtual void Run();
+  virtual double UpdateExScore(const SymbolicExecution ex);
+  void PrintAllEx(const vector<std::pair<size_t,double> >);
+ private:
+
+  vector<SymbolicExecution> exs; 
+};
+
+class IcfgMaxExpectLocalSearch : public MaxExpectLocalSearch {
+ public:
+  IcfgMaxExpectLocalSearch(const string& program, int max_iterations);
+  virtual ~IcfgMaxExpectLocalSearch(){};
+
+  virtual double UpdateBranchScore();
+  virtual double DFSBranchScore(branch_id_t branch, set<branch_id_t> path);
+
+  virtual void MapBranch(const SymbolicExecution& ex, vector<branch_id_t>* new_branches_);
+
+};
+
+class IcfgMaxExpectGlobalSearch : public MaxExpectGlobalSearch {
+ public:
+  IcfgMaxExpectGlobalSearch(const string& program, int max_iterations);
+  virtual ~IcfgMaxExpectGlobalSearch(){};
+  
+  virtual double UpdateBranchScore();
+  virtual double DFSBranchScore(branch_id_t branch, set<branch_id_t> path);
+  virtual double UpdateExScore(const SymbolicExecution ex);
+
+  virtual void MapBranch(const SymbolicExecution& ex, vector<branch_id_t>* new_branches_);
+};
 }  // namespace crest
 
 #endif  // RUN_CREST_CONCOLIC_SEARCH_H__
